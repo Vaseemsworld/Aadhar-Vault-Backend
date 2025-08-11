@@ -85,17 +85,22 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': 'aadhaarvault_db',
-    #     'USER': 'test',
-    #     'PASSWORD': 'test',
-    #     'HOST': 'localhost',
-    #     'PORT': '5432',
-    # }
-    'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
-    
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'aadhaarvault_db',
+        'USER': 'test',
+        'PASSWORD': 'test',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
 }
+
+
+
+# Override default DB with DATABASE_URL if set (for production)
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
 
 
 
@@ -151,12 +156,12 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
-    'aadhar-vault-frontend-apf5s9imo-vaseemsworlds-projects.vercel.app',
+    'https://aadhar-vault-frontend-apf5s9imo-vaseemsworlds-projects.vercel.app',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
-    'aadhar-vault-frontend-apf5s9imo-vaseemsworlds-projects.vercel.app',
+    'https://aadhar-vault-frontend-apf5s9imo-vaseemsworlds-projects.vercel.app',
 ]
 
 
