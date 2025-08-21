@@ -6,13 +6,14 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 
 from django.contrib.auth.models import User
-from .serializers import LoginSerializer,RegisterSerializer, OrderSerializer, OperatorCreateSerializer, OperatorListSerializer
+from .serializers import LoginSerializer,RegisterSerializer, OrderSerializer, OrderListSerializer, OperatorCreateSerializer, OperatorListSerializer
 import os
 from django.core.files.storage import default_storage
 
 
 from .models import Order
 from datetime import date
+from .utils import enhance_fingerprint
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')
 class CSRFView(APIView):
@@ -27,32 +28,18 @@ class UserView(APIView):
             return Response({"username": request.user.username,"is_staff": request.user.is_staff})
         return Response({"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
 
-class IsAdminUser(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return request.user and request.user.is_staff
 class OperatorCreateView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = OperatorCreateSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
 class OperatorListView(generics.ListAPIView):
     queryset = User.objects.filter(is_staff=False)
     serializer_class = OperatorListSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdminUser]
-
-    # def get_queryset(self):
-    #     user = self.request.user
-    #     if user.is_staff:
-    #         return User.objects.all()
-    #     else:
-    #         return User.objects.filter(created_by=user)
-        
-    # def perform_create(self, serializer):
-    #     serializer.save(created_by=self.request.user)
-    
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
 class OperatorDeleteView(generics.DestroyAPIView):
     queryset = User.objects.filter(is_staff=False)
     serializer_class = OperatorListSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
 
 
 class RegisterView(APIView):
@@ -89,7 +76,6 @@ class LogoutView(APIView):
 
 class OrderView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-
     
     def get(self, request):
         orderType = request.query_params.get('type', None)
@@ -101,12 +87,10 @@ class OrderView(APIView):
         
         if orderType:
             orders = orders.filter(orderType=orderType)
-        # else:
-        #     orders = Order.objects.all()
-        
-        serializer = OrderSerializer(orders, many=True)
+
+       
+        serializer = OrderListSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
 
     def post(self, request):
         serializer = OrderSerializer(data=request.data)
@@ -125,13 +109,6 @@ class OrderView(APIView):
             validated_data_serializable = make_json_serializable(dict(validated_data))
             
             try:
-                # uploaded_files = {}
-                # fileFields = ['birthCertificate', 'childPhoto', 'addressProof', 'document']
-                # for field in fileFields:
-                #     if field in request.FILES:
-                #         file = request.FILES[field]
-                #         filePath = self.saveUploadedFile(file, orderType,validated_data['fullName'])
-                #         uploaded_files[field] = filePath
                 fingerprints = validated_data.get('fingerprints', {})
 
                 order_fields = {
@@ -148,14 +125,12 @@ class OrderView(APIView):
                 if validated_data.get('dateOfBirth'):
                     order_fields['dateOfBirth'] = validated_data['dateOfBirth']
 
-                # order = Order.objects.create(**order_fields)
 
                 response_data = {
                     'message': 'Order submitted successfully',
                     'application_id': f"APP_{orderType.upper()}_{hash(validated_data['fullName'])}",
                     'order_type': orderType,
                     'formData': validated_data,
-                    # 'files_uploaded': list(uploaded_files.keys()),
                     'fingerprints_received': list(fingerprints.keys()) if fingerprints else []
                 }
                 
@@ -163,14 +138,6 @@ class OrderView(APIView):
             except Exception as e:
                 return Response({"Failed to process data": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    # def saveUploadedFile(self, file, orderType, fullName):
-        upload_dir = f'aadhaar_vault/{orderType}/{fullName.replace(" ", "_")}'
-        filename = f"{file.name}"
-        file_path = os.path.join(upload_dir, filename)
-
-        saved_path = default_storage.save(file_path, file)
-        return saved_path
     
 
     def delete(self, request, *args,**kwargs):
@@ -190,3 +157,42 @@ class OrderView(APIView):
             print(f"An unexpected error occurred: {str(e)}") 
             return Response({'error': f'An internal server error occurred: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+class FingerprintsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, pk):
+        try:
+            order = Order.objects.get(pk=pk)
+            if not request.user.is_staff and order.created_by != request.user:
+                return Response({"error": "Not authorized"}, status=status.HTTP_403_FORBIDDEN)
+
+            fingerprints = order.fingerprints or {}
+            if (request.user.is_staff):
+                print("Enhancing fingerprints for admin")
+                # enhance fingerprints for admin
+                enhanced_fingerprints = {}
+                for finger, value in fingerprints.items():
+                    try:
+                        if isinstance(value, dict):
+                            img_base64 = value["BitmapData"]
+                            enhanced_img = enhance_fingerprint(img_base64)
+                            enhanced_fingerprints[finger] = {**value, "BitmapData": enhanced_img}
+                        else:
+                            enhanced_fingerprints[finger] = value 
+                        # enhanced_fingerprints[finger] = enhance_fingerprint(img_base64)
+
+                    except Exception as e:
+                        enhanced_fingerprints[finger] = value
+                fingerprints = enhanced_fingerprints
+            else:
+                # simple fingerprints
+                pass
+            
+            serilizer = OrderSerializer(order, many=False)
+            data = serilizer.data
+            data['fingerprints'] = fingerprints
+            return Response({"data": data}, status=status.HTTP_200_OK)
+        except Order.DoesNotExist:
+            return Response({"error":"Order not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error":str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -64,17 +64,8 @@ class OrderSerializer(serializers.ModelSerializer):
     mobileNumber = serializers.CharField(max_length=15)
     fatherName = serializers.CharField(max_length=50, required=False,allow_blank=True)
 
-
-
-    #mobile fields
-    # email = serializers.EmailField(required=False, allow_blank=True)
-    # purpose = serializers.CharField(max_length=100, required=False, allow_blank=True)
-
-    #child fields
-    # nameInHindi = serializers.CharField(max_length=50, required=False, allow_blank=True)
     dateOfBirth = serializers.DateField(required=False, allow_null=True)
     gender = serializers.ChoiceField(choices=['male', 'female', 'other'], required=False, allow_blank=True)
-    # fatherNameInHindi = serializers.CharField(max_length=50, required=False, allow_blank=True)
     fatherAadhaarNumber = serializers.CharField(max_length=12, required=False, allow_blank=True)
     village = serializers.CharField(max_length=100, required=False, allow_blank=True)
     post = serializers.CharField(max_length=100, required=False, allow_blank=True)
@@ -83,23 +74,13 @@ class OrderSerializer(serializers.ModelSerializer):
     state = serializers.CharField(max_length=100, required=False, allow_blank=True)
     pincode = serializers.CharField(max_length=10, required=False, allow_blank=True)
 
-    # birthCertificate = serializers.FileField(required=False, allow_empty_file=True)
-    # childPhoto = serializers.FileField(required=False, allow_empty_file=True)
-    # addressProof = serializers.FileField(required=False, allow_empty_file=True)
     
-    #demographics fields
-    # document = serializers.FileField(required=False, allow_empty_file=True)
-    
-    fingerprints = serializers.CharField(required=False, allow_blank=True)
+    fingerprints = serializers.JSONField(required=False)
 
     def validate_fingerprints(self, data):
-        if data:
-            try:
-                fingerprints = json.loads(data)
-                return fingerprints
-            except json.JSONDecodeError:
-                raise serializers.ValidationError("Invalid fingerprints data")
-        return {}
+        if data and not isinstance(data, dict):
+            raise serializers.ValidationError("Fingerprints must be a valid JSON object.")
+        return data or {}
     
     def validate(self, data):
         order_type = data.get('orderType')
@@ -127,5 +108,10 @@ class OrderSerializer(serializers.ModelSerializer):
     
 
 
+class OrderListSerializer(serializers.ModelSerializer):
+    operator_username = serializers.CharField(source='created_by.username', read_only=True)
 
+    class Meta:
+        model = Order
+        exclude = ["fingerprints"]
 

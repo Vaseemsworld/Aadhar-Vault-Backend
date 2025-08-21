@@ -26,8 +26,8 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'your-default-secret-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-
-ALLOWED_HOSTS = ['appname..heokuapp.com','localhost', '127.0.0.1']
+# DEBUG = True
+ALLOWED_HOSTS = [*]
 
 
 # Application definition
@@ -156,12 +156,12 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
-    'https://aadhar-vault-frontend-apf5s9imo-vaseemsworlds-projects.vercel.app',
+    'https://aadhar-vault-frontend-rust.vercel.app',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
-    'https://aadhar-vault-frontend-apf5s9imo-vaseemsworlds-projects.vercel.app',
+    'https://aadhar-vault-frontend-rust.vercel.app',
 ]
 
 
