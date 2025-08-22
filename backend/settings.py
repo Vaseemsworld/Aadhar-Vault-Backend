@@ -174,7 +174,6 @@ CORS_ALLOWED_ORIGINS = [
 
 CSRF_TRUSTED_ORIGINS = [
     'https://aadhar-vault-backend.onrender.com',
-    'http://localhost:5173',
     'https://aadhar-vault-frontend-rust.vercel.app',
 ]
 
