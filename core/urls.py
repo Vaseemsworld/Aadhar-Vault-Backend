@@ -10,8 +10,8 @@ urlpatterns = [
     path("register/", RegisterView.as_view()),
     path("login/", LoginView.as_view()),
     path("logout/", LogoutView.as_view()),
-    path("user/", UserView.as_view()),
     path("csrf/", CSRFView.as_view()),
+    path("user/", UserView.as_view()),
 
     path("operators/", OperatorListView.as_view()),
     path("create-operator/", OperatorCreateView.as_view()),
