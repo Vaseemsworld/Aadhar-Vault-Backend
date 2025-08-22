@@ -93,27 +93,40 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 #     }
 # }
 
-DATABASE_URL = os.environ.get("DATABASE_URL")
-if DATABASE_URL:
-    DATABASES = {
-        "default": dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            ssl_require=not os.environ.get('DEBUG', 'False') == 'True'
-        )
-    }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": "aadhaar_vault_db",
-            "USER": "aadhaar_vault_user",
-            "PASSWORD": "password",
-            "HOST": "localhost",
-            "PORT": "5432",
-        }
-    }
+# DATABASE_URL = os.environ.get("DATABASE_URL")
+# if DATABASE_URL:
+#     DATABASES = {
+#         "default": dj_database_url.config(
+#             default=DATABASE_URL,
+#             conn_max_age=600,
+#             ssl_require=not os.environ.get('DEBUG', 'False') == 'True'
+#         )
+#     }
+# else:
+#     DATABASES = {
+#         "default": {
+#             "ENGINE": "django.db.backends.postgresql",
+#             "NAME": "aadhaar_vault_db",
+#             "USER": "aadhaar_vault_user",
+#             "PASSWORD": "password",
+#             "HOST": "localhost",
+#             "PORT": "5432",
+#         }
+#     }
     
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "aadhaarvault_db",
+        "USER": "aadhaarvault_db_user",
+        "PASSWORD": "gI77CKs6ocDZzUUoyPdS3lbPa9DAKpHk",
+        "HOST": "dpg-d2jtghbe5dus738hqpfg-a.oregon-postgres.render.com",
+        "PORT": "5432",
+        "OPTIONS": {
+            "sslmode": "require",
+        },
+    }
+}
 
 
 # Password validation
@@ -186,7 +199,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10*1024*1024  # 10 MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10*1024*1024  # 10 MB
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_SSL_REDIRECT = not DEBUG
-SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_SAMESITE = "None"
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
