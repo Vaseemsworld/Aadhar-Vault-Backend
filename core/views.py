@@ -20,7 +20,8 @@ class CSRFView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        return Response({'message': 'CSRF cookie set'}, status=status.HTTP_200_OK)
+        csrf_token = request.META.get('CSRF_COOKIE', None)
+        return Response({'csrfToken':csrf_token}, status=status.HTTP_200_OK)
 
 class UserView(APIView):
     def get(self, request):
