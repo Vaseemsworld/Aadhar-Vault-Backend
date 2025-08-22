@@ -1,1 +1,2 @@
-web: gunicorn backend.wsgi
+release: python manage.py migrate && python manage.py collectstatic --noinput
+web: gunicorn backend.wsgi:application --preload --chdir=.

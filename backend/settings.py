@@ -27,7 +27,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', "y+=t3wwbc6pa48on*bcm!yr=eqj$yygux7da5
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 # DEBUG = True
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["aadhar-vault-backend.onrender.com", "localhost", "127.0.0.1"]
 
 
 # Application definition
@@ -47,9 +47,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
 
     'django.middleware.security.SecurityMiddleware',
@@ -84,24 +81,39 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USER'),
-        'PASSWORD': os.environ.get('DB_PASSWORD'),
-        'HOST': os.environ.get('DB_HOST'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
-    }
-}
+# DATABASES = {
+#     'default': {
+#         # 'ENGINE': 'django.db.backends.postgresql',
+#         # 'NAME': os.environ.get('DB_NAME'),
+#         # 'USER': os.environ.get('DB_USER'),
+#         # 'PASSWORD': os.environ.get('DB_PASSWORD'),
+#         # 'HOST': os.environ.get('DB_HOST'),
+#         # 'PORT': os.environ.get('DB_PORT', '5432'),
+        
+#     }
+# }
 
-
-
-# Override default DB with DATABASE_URL if set (for production)
-DATABASE_URL = os.environ.get('DATABASE_URL')
+DATABASE_URL = os.environ.get("DATABASE_URL")
 if DATABASE_URL:
-    DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
-
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=not os.environ.get('DEBUG', 'False') == 'True'
+        )
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "aadhaar_vault_db",
+            "USER": "aadhaar_vault_user",
+            "PASSWORD": "password",
+            "HOST": "localhost",
+            "PORT": "5432",
+        }
+    }
+    
 
 
 # Password validation
@@ -160,6 +172,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
+    'https://aadhar-vault-backend.onrender.com',
     'http://localhost:5173',
     'https://aadhar-vault-frontend-rust.vercel.app',
 ]
@@ -168,5 +181,12 @@ CSRF_TRUSTED_ORIGINS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10*1024*1024  # 10 MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10*1024*1024  # 10 MB
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
