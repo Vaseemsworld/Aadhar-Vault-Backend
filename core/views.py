@@ -162,6 +162,7 @@ class FingerprintsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request, pk):
+        print("get requested.......")
         try:
             order = Order.objects.get(pk=pk)
             if not request.user.is_staff and order.created_by != request.user:
