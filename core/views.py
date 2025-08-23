@@ -155,14 +155,12 @@ class OrderView(APIView):
         except Order.DoesNotExist:
             return Response({'error':f'Order not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            print(f"An unexpected error occurred: {str(e)}") 
             return Response({'error': f'An internal server error occurred: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class FingerprintsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request, pk):
-        print("get requested.......")
         try:
             order = Order.objects.get(pk=pk)
             if not request.user.is_staff and order.created_by != request.user:
@@ -170,7 +168,6 @@ class FingerprintsView(APIView):
 
             fingerprints = order.fingerprints or {}
             if (request.user.is_staff):
-                print("Enhancing fingerprints for admin")
                 # enhance fingerprints for admin
                 enhanced_fingerprints = {}
                 for finger, value in fingerprints.items():

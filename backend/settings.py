@@ -26,7 +26,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', "y+=t3wwbc6pa48on*bcm!yr=eqj$yygux7da5
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-# DEBUG = True
+
 ALLOWED_HOSTS = ["aadhar-vault-backend.onrender.com", "localhost", "127.0.0.1"]
 
 
@@ -101,20 +101,6 @@ else:
             "PORT": "5432",
         }
     }
-    
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": "aadhaarvault_db",
-#         "USER": "aadhaarvault_db_user",
-#         "PASSWORD": "gI77CKs6ocDZzUUoyPdS3lbPa9DAKpHk",
-#         "HOST": "dpg-d2jtghbe5dus738hqpfg-a.oregon-postgres.render.com",
-#         "PORT": "5432",
-#         "OPTIONS": {
-#             "sslmode": "require",
-#         },
-#     }
-# }
 
 
 # Password validation
@@ -173,6 +159,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
     'https://aadhar-vault-backend.onrender.com',
     'https://aadhar-vault-frontend-rust.vercel.app',
 ]
